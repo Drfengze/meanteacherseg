@@ -41,9 +41,8 @@ class data_load:
         glob = tf.io.gfile.glob(self.input_files)
         dataset = tf.data.TFRecordDataset(glob, compression_type="GZIP")
         dataset = dataset.map(self.parse_tfrecord, num_parallel_calls=10)
-        dataset_size = dataset.reduce(0, lambda x, _: x + 1).numpy()
         dataset = dataset.map(self.to_tuple).shuffle(self.buffer_size)
-        return dataset,dataset_size
+        return dataset
 
     # def get_training_dataset(self):
     #     files = self.input_files
@@ -65,8 +64,7 @@ class data_load:
 
     def get_pridiction_dataset(self):
         files = self.input_files
-        dataset_size = None
         dataset = tf.data.TFRecordDataset(files, compression_type="GZIP")
         dataset = dataset.map(self.parse_tfrecord, num_parallel_calls=10)
         dataset = dataset.map(self.to_tuple_prediction).batch(self.batch_size)
-        return dataset,dataset_size
+        return dataset
