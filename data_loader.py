@@ -10,6 +10,7 @@ class data_load:
         response=None,
         buffer_size=6000,
         batch_size=64,
+        split=.7
     ):
         self.input_files = input_files
         self.bands = bands
@@ -18,6 +19,7 @@ class data_load:
         self.batch_size = batch_size
         self.features_dict = features_dict
         self.nclass = nclass
+        self.split = split
 
     def parse_tfrecord(self, example_proto):
         return tf.io.parse_single_example(example_proto, self.features_dict)
@@ -35,32 +37,36 @@ class data_load:
         stacked = tf.stack(inputsList, axis=0)
         return stacked
 
-    def get_dataset(self, pattern):
-        glob = tf.io.gfile.glob(pattern)
-        dataset = tf.data.TFRecordDataset(glob, compression_type="GZIP")
-        dataset = dataset.map(self.parse_tfrecord, num_parallel_calls=5)
-        dataset = dataset.map(self.to_tuple)
-        return dataset
-
     def get_training_dataset(self):
-        files = self.input_files
-        dataset = self.get_dataset(files)
-        dataset = dataset.shuffle(self.buffer_size).batch(self.batch_size)
-        # iterator = dataset.make_one_shot_iterator()
-        # data =  iterator.get_next()
-        return dataset
+        glob = tf.io.gfile.glob(self.input_files)
+        dataset = tf.data.TFRecordDataset(glob, compression_type="GZIP")
+        dataset = dataset.map(self.parse_tfrecord, num_parallel_calls=10)
+        dataset_size = dataset.reduce(0, lambda x, _: x + 1).numpy()
+        dataset = dataset.map(self.to_tuple).shuffle(self.buffer_size)
+        return dataset,dataset_size
 
-    def get_eval_dataset(self):
-        files = self.input_files
-        dataset = self.get_dataset(files)
-        dataset = dataset.batch(self.batch_size)  # .repeat()
-        # iterator = dataset.make_one_shot_iterator()
-        # data =  iterator.get_next()
-        return dataset
+    # def get_training_dataset(self):
+    #     files = self.input_files
+    #     dataset,dataset_size = self.get_dataset(files)
+    #     train_dataset = dataset.take(self.split*dataset_size)
+    #     valid_dataset = dataset.skip()
+    #     train_dataset = train_dataset.batch(self.batch_size)
+    #     # iterator = dataset.make_one_shot_iterator()
+    #     # data =  iterator.get_next()
+    #     return train_dataset
+    
+    # def get_eval_dataset(self):
+    #     files = self.input_files
+    #     dataset = self.get_dataset(files)
+    #     dataset = dataset.batch(self.batch_size)  # .repeat()
+    #     # iterator = dataset.make_one_shot_iterator()
+    #     # data =  iterator.get_next()
+    #     return dataset
 
     def get_pridiction_dataset(self):
         files = self.input_files
+        dataset_size = None
         dataset = tf.data.TFRecordDataset(files, compression_type="GZIP")
-        dataset = dataset.map(self.parse_tfrecord, num_parallel_calls=5)
+        dataset = dataset.map(self.parse_tfrecord, num_parallel_calls=10)
         dataset = dataset.map(self.to_tuple_prediction).batch(self.batch_size)
-        return dataset
+        return dataset,dataset_size
