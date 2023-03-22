@@ -43,9 +43,9 @@ def cosine_rampdown(current, rampdown_length):
     return float(.5 * (np.cos(np.pi * current / rampdown_length) + 1))
 
 
-def get_current_consistency_weight(epoch):
+def get_current_consistency_weight(epoch,consistency_rampup=200.0):
     # Consistency ramp-up from https://arxiv.org/abs/1610.02242
-    return consistency * sigmoid_rampup(epoch, consistency_rampup)
+    return sigmoid_rampup(epoch, consistency_rampup)
 
 def update_ema_variables(model, ema_model, alpha, global_step):
     # Use the true average until the exponential average is more correct
