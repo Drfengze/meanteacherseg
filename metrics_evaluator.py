@@ -3,8 +3,8 @@ from sklearn.metrics import average_precision_score
 
 class MetricsEvaluator: 
     def __init__(self, gt_data, pred_data):
-        self.gt_data = gt_data.cpu().numpy()
-        self.pred_data = pred_data.cpu().numpy()
+        self.gt_data = gt_data#.cpu().numpy()
+        self.pred_data = pred_data#.cpu().numpy()
 
     def f1_score(self):
         # Compute true positives, false positives, and false negatives
@@ -34,8 +34,8 @@ class MetricsEvaluator:
         return dice_coefficient
     
     def average_precision(self):
-        y_true = self.gt_data.flatten()
-        y_scores = self.pred_data.flatten()
+        y_true = self.gt_data#.flatten()
+        y_scores = self.pred_data#.flatten()
         nan_mask = np.logical_or(np.isnan(y_true), np.isnan(y_scores))
         y_true = y_true[~nan_mask]
         y_scores = y_scores[~nan_mask]
