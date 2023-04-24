@@ -4,7 +4,7 @@ from glob import glob
 import torch.utils.data
 from data_loader import data_load
 import tensorflow as tf
-from unet_pytorch import build_unet
+from att2d_unet import build_unet
 import torch.nn as nn
 import json
 import xarray as xr
@@ -108,9 +108,9 @@ def main(args):
     device = "cuda"
     folder = "prediction"
     model = (
-        build_unet(len(bands), nclass).cuda()
+        build_unet(len(bands), nclass,args.attention_type).cuda()
         if device == "cuda"
-        else build_unet(len(bands), nclass)
+        else build_unet(len(bands), nclass,args.attention_type)
     )
 
     # Load the state_dict
@@ -154,5 +154,6 @@ if __name__ == "__main__":
     parser.add_argument("--ckpt_path", type=str, required=True)
     parser.add_argument("--pred_folder", type=str, required=True)
     parser.add_argument("--tif_filename", type=str, required=True)
+    parser.add_argument("--attention_type", type=str, required=True)
     args = parser.parse_args()
     main(args)
